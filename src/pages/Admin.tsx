@@ -29,6 +29,7 @@ interface Booking {
   phone: string;
   email: string | null;
   event_date: string;
+  event_time: string | null;
   service: string;
   message: string | null;
   status: BookingStatus;
@@ -320,9 +321,16 @@ const AdminPage = () => {
                               day: "numeric" 
                             })}</span>
                           </div>
+                          <div className="flex items-center gap-2 text-foreground">
+                            <Clock className="w-4 h-4 text-primary" />
+                            <span>
+                              {booking.event_time 
+                                ? booking.event_time.slice(0, 5) 
+                                : "Heure non spécifiée"}
+                            </span>
+                          </div>
                           <div className="flex items-center gap-2 text-muted-foreground">
-                            <Clock className="w-4 h-4" />
-                            <span>{booking.service}</span>
+                            <span className="text-sm bg-secondary/50 px-2 py-1 rounded">{booking.service}</span>
                           </div>
                         </div>
                       </div>
