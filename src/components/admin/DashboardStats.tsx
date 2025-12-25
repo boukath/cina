@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, CheckCircle, Clock, XCircle, Euro, Users } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, XCircle, Banknote, Users } from 'lucide-react';
 
 interface Stats {
   total: number;
@@ -131,8 +131,8 @@ export function DashboardStats() {
     },
     {
       title: 'CA ce mois',
-      value: `${stats.thisMonthRevenue.toFixed(0)} €`,
-      icon: Euro,
+      value: `${stats.thisMonthRevenue.toLocaleString('fr-DZ')} DZD`,
+      icon: Banknote,
       color: 'text-primary',
       bgColor: 'bg-primary/10'
     },
