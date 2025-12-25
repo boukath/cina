@@ -26,6 +26,7 @@ import AvailabilityManager from "@/components/admin/AvailabilityManager";
 import { ServicesManager } from "@/components/admin/ServicesManager";
 import { DashboardStats } from "@/components/admin/DashboardStats";
 import { GalleryManager } from "@/components/admin/GalleryManager";
+import { BookingEditDialog } from "@/components/admin/BookingEditDialog";
 import type { User as SupabaseUser, Session } from "@supabase/supabase-js";
 
 type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
@@ -515,6 +516,10 @@ const AdminPage = () => {
                         <div className="flex flex-wrap gap-2">
                           {booking.status === "pending" && (
                             <>
+                              <BookingEditDialog 
+                                booking={booking} 
+                                onSuccess={fetchBookings} 
+                              />
                               <Button
                                 size="sm"
                                 variant="outline"
