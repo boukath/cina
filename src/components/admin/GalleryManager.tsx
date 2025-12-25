@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Trash2, Upload, Image, Star, StarOff } from 'lucide-react';
+import { Plus, Trash2, Upload, Image, Star, StarOff, Loader2 } from 'lucide-react';
+import { blurFacesInImage } from '@/utils/faceBlur';
 
 interface GalleryImage {
   id: string;
@@ -35,6 +36,7 @@ export function GalleryManager() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [processingFaces, setProcessingFaces] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     category: 'general',
@@ -107,18 +109,36 @@ export function GalleryManager() {
     }
 
     setUploading(true);
+    setProcessingFaces(true);
 
     try {
       let beforeUrl = null;
       let afterUrl = null;
 
+      // Process and blur faces in images
+      toast.info('Traitement des visages en cours...');
+      
+      let processedBeforeFile = beforeFile;
+      let processedAfterFile = afterFile;
+
       if (beforeFile) {
-        beforeUrl = await uploadFile(beforeFile, 'before');
-        if (!beforeUrl) throw new Error('Erreur upload image avant');
+        processedBeforeFile = await blurFacesInImage(beforeFile);
       }
 
       if (afterFile) {
-        afterUrl = await uploadFile(afterFile, 'after');
+        processedAfterFile = await blurFacesInImage(afterFile);
+      }
+
+      setProcessingFaces(false);
+      toast.info('Upload des images...');
+
+      if (processedBeforeFile) {
+        beforeUrl = await uploadFile(processedBeforeFile, 'before');
+        if (!beforeUrl) throw new Error('Erreur upload image avant');
+      }
+
+      if (processedAfterFile) {
+        afterUrl = await uploadFile(processedAfterFile, 'after');
         if (!afterUrl) throw new Error('Erreur upload image après');
       }
 
@@ -135,7 +155,7 @@ export function GalleryManager() {
 
       if (error) throw error;
 
-      toast.success('Image ajoutée avec succès');
+      toast.success('Image ajoutée avec visages floutés');
       fetchImages();
       closeDialog();
     } catch (error: any) {
@@ -143,6 +163,7 @@ export function GalleryManager() {
       toast.error(error.message || 'Erreur lors de l\'ajout');
     } finally {
       setUploading(false);
+      setProcessingFaces(false);
     }
   };
 
@@ -315,11 +336,23 @@ export function GalleryManager() {
               </div>
 
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={closeDialog}>
+                <Button type="button" variant="outline" onClick={closeDialog} disabled={uploading}>
                   Annuler
                 </Button>
                 <Button type="submit" disabled={uploading}>
-                  {uploading ? 'Upload en cours...' : 'Ajouter'}
+                  {processingFaces ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Floutage visages...
+                    </>
+                  ) : uploading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Upload...
+                    </>
+                  ) : (
+                    'Ajouter'
+                  )}
                 </Button>
               </div>
             </form>
