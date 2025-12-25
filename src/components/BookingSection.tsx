@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Clock, User, Phone, Mail, MessageSquare, CheckCircle } from "lucide-react";
+import { Calendar, Clock, User, Phone, Mail, MessageSquare, CheckCircle, Euro } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,13 +9,13 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import TimeSlotPicker from "./TimeSlotPicker";
 
-const serviceOptions = [
-  "Coiffure Mariée",
-  "Coiffure Invitée",
-  "Occasions Spéciales",
-  "Pack Groupe",
-  "Autre",
-];
+interface Service {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  duration_minutes: number | null;
+}
 
 const BookingSection = () => {
   const [formData, setFormData] = useState({
@@ -29,6 +29,26 @@ const BookingSection = () => {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [services, setServices] = useState<Service[]>([]);
+  const [loadingServices, setLoadingServices] = useState(true);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      const { data, error } = await supabase
+        .from('services')
+        .select('id, name, description, price, duration_minutes')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+
+      if (!error && data) {
+        setServices(data);
+      }
+      setLoadingServices(false);
+    };
+    fetchServices();
+  }, []);
+
+  const selectedService = services.find(s => s.name === formData.service);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -270,14 +290,44 @@ const BookingSection = () => {
                     onChange={handleChange}
                     className="w-full h-12 px-4 rounded-xl border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     required
+                    disabled={loadingServices}
                   >
-                    <option value="">Choisir un service...</option>
-                    {serviceOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
+                    <option value="">
+                      {loadingServices ? "Chargement..." : "Choisir un service..."}
+                    </option>
+                    {services.map((service) => (
+                      <option key={service.id} value={service.name}>
+                        {service.name} - {Number(service.price).toFixed(0)} €
                       </option>
                     ))}
                   </select>
+                  
+                  {/* Price Display */}
+                  {selectedService && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-3 p-4 rounded-xl bg-primary/10 border border-primary/20"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-foreground">{selectedService.name}</p>
+                          {selectedService.description && (
+                            <p className="text-sm text-muted-foreground">{selectedService.description}</p>
+                          )}
+                          {selectedService.duration_minutes && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Durée estimée: {selectedService.duration_minutes} min
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 text-xl font-bold text-primary">
+                          <Euro className="w-5 h-5" />
+                          {Number(selectedService.price).toFixed(0)}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
 
                 {/* Calendar & Time Slot Picker */}
