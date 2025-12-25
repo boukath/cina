@@ -15,7 +15,8 @@ import {
   CalendarDays,
   ListTodo,
   LogOut,
-  Euro
+  Euro,
+  Image
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AvailabilityManager from "@/components/admin/AvailabilityManager";
 import { ServicesManager } from "@/components/admin/ServicesManager";
 import { DashboardStats } from "@/components/admin/DashboardStats";
+import { GalleryManager } from "@/components/admin/GalleryManager";
 import type { User as SupabaseUser, Session } from "@supabase/supabase-js";
 
 type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
@@ -61,7 +63,7 @@ const AdminPage = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState<BookingStatus | "all">("all");
-  const [activeTab, setActiveTab] = useState<"bookings" | "availability" | "services">("bookings");
+  const [activeTab, setActiveTab] = useState<"bookings" | "availability" | "services" | "gallery">("bookings");
 
   // Check admin role
   const checkAdminRole = async (userId: string) => {
@@ -388,6 +390,17 @@ const AdminPage = () => {
             <Euro className="w-4 h-4" />
             Tarifs
           </button>
+          <button
+            onClick={() => setActiveTab("gallery")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors ${
+              activeTab === "gallery"
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary/50 text-foreground hover:bg-secondary"
+            }`}
+          >
+            <Image className="w-4 h-4" />
+            Galerie
+          </button>
         </div>
 
         {activeTab === "availability" ? (
@@ -396,6 +409,8 @@ const AdminPage = () => {
           </div>
         ) : activeTab === "services" ? (
           <ServicesManager />
+        ) : activeTab === "gallery" ? (
+          <GalleryManager />
         ) : (
           <>
             {/* Filter */}
