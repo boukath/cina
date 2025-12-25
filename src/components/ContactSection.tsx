@@ -90,18 +90,13 @@ const ContactSection = () => {
           className="flex justify-center gap-4 mt-12"
         >
           <a
-            href="#"
+            href="https://www.instagram.com/cina_hairstyle?igsh=cXM0aWd4Y2k0NnRk"
+            target="_blank"
+            rel="noopener noreferrer"
             className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300"
             aria-label="Instagram"
           >
             <Instagram className="w-5 h-5" />
-          </a>
-          <a
-            href="#"
-            className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300"
-            aria-label="Facebook"
-          >
-            <Facebook className="w-5 h-5" />
           </a>
         </motion.div>
       </div>
