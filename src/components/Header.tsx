@@ -17,13 +17,13 @@ const Header = () => {
   }, []);
 
   const navLinks = [
-    { href: "#accueil", label: "Accueil" },
-    { href: "#services", label: "Services" },
-    { href: "#galerie", label: "Galerie" },
-    { href: "#temoignages", label: "Témoignages" },
-    { href: "#apropos", label: "À Propos" },
-    { href: "#faq", label: "FAQ" },
-    { href: "#contact", label: "Contact" },
+    { href: "/#accueil", label: "Accueil" },
+    { href: "/#services", label: "Services" },
+    { href: "/#galerie", label: "Galerie" },
+    { href: "/#temoignages", label: "Témoignages" },
+    { href: "/#apropos", label: "À Propos" },
+    { href: "/#faq", label: "FAQ" },
+    { href: "/#contact", label: "Contact" },
   ];
 
   return (
@@ -40,7 +40,7 @@ const Header = () => {
       <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
         {/* Logo */}
         <motion.a
-          href="#accueil"
+          href="/"
           className="font-display text-2xl md:text-3xl font-semibold text-foreground"
           whileHover={{ scale: 1.02 }}
         >
@@ -65,7 +65,7 @@ const Header = () => {
         <div className="hidden md:flex items-center gap-3">
           <LanguageSwitcher />
           <Button variant="hero" size="default" asChild>
-            <a href="#reservation">
+            <a href="/#reservation">
               <Phone className="w-4 h-4 mr-2" />
               Réserver
             </a>
@@ -107,7 +107,7 @@ const Header = () => {
                 <LanguageSwitcher />
               </div>
               <Button variant="hero" size="lg" className="mt-2" asChild>
-                <a href="#reservation" onClick={() => setIsMobileMenuOpen(false)}>
+                <a href="/#reservation" onClick={() => setIsMobileMenuOpen(false)}>
                   <Phone className="w-4 h-4 mr-2" />
                   Réserver
                 </a>
