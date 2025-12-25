@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Clock, User, Phone, Mail, MessageSquare, CheckCircle, Euro } from "lucide-react";
+import { Calendar, Clock, User, Phone, Mail, MessageSquare, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -297,7 +297,7 @@ const BookingSection = () => {
                     </option>
                     {services.map((service) => (
                       <option key={service.id} value={service.name}>
-                        {service.name} - {Number(service.price).toFixed(0)} €
+                        {service.name} - {Number(service.price).toLocaleString('fr-DZ')} DZD
                       </option>
                     ))}
                   </select>
@@ -321,9 +321,8 @@ const BookingSection = () => {
                             </p>
                           )}
                         </div>
-                        <div className="flex items-center gap-1 text-xl font-bold text-primary">
-                          <Euro className="w-5 h-5" />
-                          {Number(selectedService.price).toFixed(0)}
+                        <div className="text-xl font-bold text-primary">
+                          {Number(selectedService.price).toLocaleString('fr-DZ')} DZD
                         </div>
                       </div>
                     </motion.div>
