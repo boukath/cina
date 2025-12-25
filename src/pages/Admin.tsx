@@ -14,13 +14,16 @@ import {
   EyeOff,
   CalendarDays,
   ListTodo,
-  LogOut
+  LogOut,
+  Euro
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import AvailabilityManager from "@/components/admin/AvailabilityManager";
+import { ServicesManager } from "@/components/admin/ServicesManager";
+import { DashboardStats } from "@/components/admin/DashboardStats";
 import type { User as SupabaseUser, Session } from "@supabase/supabase-js";
 
 type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
@@ -58,7 +61,7 @@ const AdminPage = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState<BookingStatus | "all">("all");
-  const [activeTab, setActiveTab] = useState<"bookings" | "availability">("bookings");
+  const [activeTab, setActiveTab] = useState<"bookings" | "availability" | "services">("bookings");
 
   // Check admin role
   const checkAdminRole = async (userId: string) => {
@@ -245,13 +248,6 @@ const AdminPage = () => {
     ? bookings 
     : bookings.filter((b) => b.status === filter);
 
-  const stats = {
-    total: bookings.length,
-    pending: bookings.filter((b) => b.status === "pending").length,
-    confirmed: bookings.filter((b) => b.status === "confirmed").length,
-    completed: bookings.filter((b) => b.status === "completed").length,
-  };
-
   // Show loading while checking auth
   if (isCheckingAuth) {
     return (
@@ -354,25 +350,8 @@ const AdminPage = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-card rounded-2xl p-6 border border-border/50">
-            <p className="text-muted-foreground text-sm">Total</p>
-            <p className="font-display text-3xl font-bold text-foreground">{stats.total}</p>
-          </div>
-          <div className="bg-yellow-50 rounded-2xl p-6 border border-yellow-200">
-            <p className="text-yellow-700 text-sm">En attente</p>
-            <p className="font-display text-3xl font-bold text-yellow-800">{stats.pending}</p>
-          </div>
-          <div className="bg-green-50 rounded-2xl p-6 border border-green-200">
-            <p className="text-green-700 text-sm">Confirmés</p>
-            <p className="font-display text-3xl font-bold text-green-800">{stats.confirmed}</p>
-          </div>
-          <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
-            <p className="text-blue-700 text-sm">Terminés</p>
-            <p className="font-display text-3xl font-bold text-blue-800">{stats.completed}</p>
-          </div>
-        </div>
+        {/* Dashboard Stats */}
+        <DashboardStats />
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6">
@@ -398,12 +377,25 @@ const AdminPage = () => {
             <CalendarDays className="w-4 h-4" />
             Disponibilités
           </button>
+          <button
+            onClick={() => setActiveTab("services")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors ${
+              activeTab === "services"
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary/50 text-foreground hover:bg-secondary"
+            }`}
+          >
+            <Euro className="w-4 h-4" />
+            Tarifs
+          </button>
         </div>
 
         {activeTab === "availability" ? (
           <div className="bg-card rounded-2xl p-6 border border-border/50">
             <AvailabilityManager />
           </div>
+        ) : activeTab === "services" ? (
+          <ServicesManager />
         ) : (
           <>
             {/* Filter */}
