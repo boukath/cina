@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import TimeSlotPicker from "./TimeSlotPicker";
+import DateTimePicker from "./DateTimePicker";
 
 interface Service {
   id: string;
@@ -329,18 +329,21 @@ const BookingSection = () => {
                   )}
                 </div>
 
-                {/* Calendar & Time Slot Picker */}
+                {/* Calendar & Time Picker */}
                 <div className="bg-secondary/30 rounded-xl p-4">
                   <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-4">
                     <Calendar className="w-4 h-4" />
-                    Date et Heure *
+                    Date et Heure souhaitées *
                   </label>
-                  <TimeSlotPicker
+                  <DateTimePicker
                     selectedDate={selectedDate}
                     selectedTime={selectedTime}
                     onDateSelect={setSelectedDate}
                     onTimeSelect={setSelectedTime}
                   />
+                  <p className="text-xs text-muted-foreground mt-3 text-center">
+                    Votre demande sera confirmée par l'administrateur
+                  </p>
                 </div>
 
                 {/* Message */}
