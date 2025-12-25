@@ -11,12 +11,15 @@ import {
   AlertCircle,
   Lock,
   Eye,
-  EyeOff
+  EyeOff,
+  CalendarDays,
+  ListTodo
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import AvailabilityManager from "@/components/admin/AvailabilityManager";
 
 // Simple password protection (in production, use proper authentication)
 const ADMIN_PASSWORD = "cina2024";
@@ -51,6 +54,7 @@ const AdminPage = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState<BookingStatus | "all">("all");
+  const [activeTab, setActiveTab] = useState<"bookings" | "availability">("bookings");
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -244,22 +248,54 @@ const AdminPage = () => {
           </div>
         </div>
 
-        {/* Filter */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          {(["all", "pending", "confirmed", "cancelled", "completed"] as const).map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                filter === status
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary/50 text-foreground hover:bg-secondary"
-              }`}
-            >
-              {status === "all" ? "Tous" : statusConfig[status].label}
-            </button>
-          ))}
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setActiveTab("bookings")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors ${
+              activeTab === "bookings"
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary/50 text-foreground hover:bg-secondary"
+            }`}
+          >
+            <ListTodo className="w-4 h-4" />
+            Réservations
+          </button>
+          <button
+            onClick={() => setActiveTab("availability")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors ${
+              activeTab === "availability"
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary/50 text-foreground hover:bg-secondary"
+            }`}
+          >
+            <CalendarDays className="w-4 h-4" />
+            Disponibilités
+          </button>
         </div>
+
+        {activeTab === "availability" ? (
+          <div className="bg-card rounded-2xl p-6 border border-border/50">
+            <AvailabilityManager />
+          </div>
+        ) : (
+          <>
+            {/* Filter */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {(["all", "pending", "confirmed", "cancelled", "completed"] as const).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setFilter(status)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    filter === status
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary/50 text-foreground hover:bg-secondary"
+                  }`}
+                >
+                  {status === "all" ? "Tous" : statusConfig[status].label}
+                </button>
+              ))}
+            </div>
 
         {/* Bookings List */}
         <div className="space-y-4">
@@ -392,6 +428,8 @@ const AdminPage = () => {
             })
           )}
         </div>
+          </>
+        )}
       </main>
     </div>
   );
