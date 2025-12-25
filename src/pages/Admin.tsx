@@ -16,7 +16,8 @@ import {
   ListTodo,
   LogOut,
   Banknote,
-  Image
+  Image,
+  BarChart3
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,8 @@ import { ServicesManager } from "@/components/admin/ServicesManager";
 import { DashboardStats } from "@/components/admin/DashboardStats";
 import { GalleryManager } from "@/components/admin/GalleryManager";
 import { BookingEditDialog } from "@/components/admin/BookingEditDialog";
+import { CompleteBookingDialog } from "@/components/admin/CompleteBookingDialog";
+import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 import type { User as SupabaseUser, Session } from "@supabase/supabase-js";
 
 type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
@@ -64,7 +67,7 @@ const AdminPage = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState<BookingStatus | "all">("all");
-  const [activeTab, setActiveTab] = useState<"bookings" | "availability" | "services" | "gallery">("bookings");
+  const [activeTab, setActiveTab] = useState<"bookings" | "availability" | "services" | "gallery" | "analytics">("bookings");
 
   // Check admin role
   const checkAdminRole = async (userId: string) => {
@@ -402,9 +405,22 @@ const AdminPage = () => {
             <Image className="w-4 h-4" />
             Galerie
           </button>
+          <button
+            onClick={() => setActiveTab("analytics")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors ${
+              activeTab === "analytics"
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary/50 text-foreground hover:bg-secondary"
+            }`}
+          >
+            <BarChart3 className="w-4 h-4" />
+            Analytics
+          </button>
         </div>
 
-        {activeTab === "availability" ? (
+        {activeTab === "analytics" ? (
+          <AnalyticsDashboard />
+        ) : activeTab === "availability" ? (
           <div className="bg-card rounded-2xl p-6 border border-border/50">
             <AvailabilityManager />
           </div>
@@ -541,15 +557,10 @@ const AdminPage = () => {
                             </>
                           )}
                           {booking.status === "confirmed" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                              onClick={() => updateBookingStatus(booking.id, "completed")}
-                            >
-                              <CheckCircle className="w-4 h-4 mr-1" />
-                              Terminer
-                            </Button>
+                            <CompleteBookingDialog 
+                              booking={booking}
+                              onSuccess={fetchBookings}
+                            />
                           )}
                           <a
                             href={`https://wa.me/213${booking.phone.replace(/\D/g, "").slice(-9)}?text=Bonjour ${booking.name}, concernant votre réservation du ${new Date(booking.event_date).toLocaleDateString("fr-FR")}...`}
