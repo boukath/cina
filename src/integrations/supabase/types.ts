@@ -19,6 +19,7 @@ export type Database = {
           created_at: string
           email: string | null
           event_date: string
+          event_time: string | null
           id: string
           message: string | null
           name: string
@@ -31,6 +32,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           event_date: string
+          event_time?: string | null
           id?: string
           message?: string | null
           name: string
@@ -43,6 +45,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           event_date?: string
+          event_time?: string | null
           id?: string
           message?: string | null
           name?: string
@@ -52,6 +55,41 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      time_slots: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          id: string
+          is_available: boolean
+          slot_date: string
+          slot_time: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          slot_date: string
+          slot_time: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          slot_date?: string
+          slot_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_slots_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

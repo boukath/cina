@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Calendar, Clock, User, Phone, Mail, MessageSquare, CheckCircle } from "lucide-react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import TimeSlotPicker from "./TimeSlotPicker";
 
 const serviceOptions = [
   "Coiffure Mariée",
@@ -20,10 +22,11 @@ const BookingSection = () => {
     name: "",
     phone: "",
     email: "",
-    date: "",
     service: "",
     message: "",
   });
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -40,10 +43,10 @@ const BookingSection = () => {
     e.preventDefault();
     
     // Validate form
-    if (!formData.name || !formData.phone || !formData.date || !formData.service) {
+    if (!formData.name || !formData.phone || !selectedDate || !selectedTime || !formData.service) {
       toast({
         title: "Erreur",
-        description: "Veuillez remplir tous les champs obligatoires.",
+        description: "Veuillez remplir tous les champs obligatoires et sélectionner un créneau.",
         variant: "destructive",
       });
       return;
@@ -56,7 +59,8 @@ const BookingSection = () => {
         name: formData.name,
         phone: formData.phone,
         email: formData.email || null,
-        event_date: formData.date,
+        event_date: format(selectedDate, "yyyy-MM-dd"),
+        event_time: selectedTime + ":00",
         service: formData.service,
         message: formData.message || null,
       });
@@ -115,10 +119,11 @@ const BookingSection = () => {
                   name: "",
                   phone: "",
                   email: "",
-                  date: "",
                   service: "",
                   message: "",
                 });
+                setSelectedDate(null);
+                setSelectedTime(null);
               }}
             >
               Nouvelle demande
@@ -254,41 +259,39 @@ const BookingSection = () => {
                   </div>
                 </div>
 
-                {/* Date & Service */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
-                      <Calendar className="w-4 h-4" />
-                      Date de l'Événement *
-                    </label>
-                    <Input
-                      name="date"
-                      type="date"
-                      value={formData.date}
-                      onChange={handleChange}
-                      className="h-12 rounded-xl"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground mb-2 block">
-                      Service *
-                    </label>
-                    <select
-                      name="service"
-                      value={formData.service}
-                      onChange={handleChange}
-                      className="w-full h-12 px-4 rounded-xl border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                      required
-                    >
-                      <option value="">Choisir...</option>
-                      {serviceOptions.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                {/* Service Selection */}
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Service *
+                  </label>
+                  <select
+                    name="service"
+                    value={formData.service}
+                    onChange={handleChange}
+                    className="w-full h-12 px-4 rounded-xl border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    required
+                  >
+                    <option value="">Choisir un service...</option>
+                    {serviceOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Calendar & Time Slot Picker */}
+                <div className="bg-secondary/30 rounded-xl p-4">
+                  <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-4">
+                    <Calendar className="w-4 h-4" />
+                    Date et Heure *
+                  </label>
+                  <TimeSlotPicker
+                    selectedDate={selectedDate}
+                    selectedTime={selectedTime}
+                    onDateSelect={setSelectedDate}
+                    onTimeSelect={setSelectedTime}
+                  />
                 </div>
 
                 {/* Message */}
