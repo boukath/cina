@@ -15,7 +15,7 @@ import {
   CalendarDays,
   ListTodo,
   LogOut,
-  Euro,
+  Banknote,
   Image
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -387,7 +387,7 @@ const AdminPage = () => {
                 : "bg-secondary/50 text-foreground hover:bg-secondary"
             }`}
           >
-            <Euro className="w-4 h-4" />
+            <Banknote className="w-4 h-4" />
             Tarifs
           </button>
           <button
