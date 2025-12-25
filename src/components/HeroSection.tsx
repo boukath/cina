@@ -34,7 +34,7 @@ const HeroSection = () => {
           >
             <span className="inline-flex items-center gap-2 text-primary font-medium mb-4 bg-primary/10 px-4 py-2 rounded-full">
               <Sparkles className="w-4 h-4" />
-              Coiffeuse Spécialiste Mariage
+              Coiffeuse Événementielle - Birkhadem
             </span>
           </motion.div>
 
@@ -55,8 +55,8 @@ const HeroSection = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg"
           >
-            Coiffures élégantes et personnalisées pour mariages et occasions 
-            spéciales. Faites de chaque moment un souvenir inoubliable.
+            Coiffures élégantes et personnalisées pour mariages, invitées et 
+            occasions spéciales. Faites de chaque moment un souvenir inoubliable.
           </motion.p>
 
           <motion.div
@@ -84,11 +84,11 @@ const HeroSection = () => {
             className="flex gap-8 mt-12 pt-8 border-t border-border/50"
           >
             <div>
-              <p className="font-display text-3xl font-bold text-foreground">500+</p>
-              <p className="text-muted-foreground text-sm">Mariées Coiffées</p>
+              <p className="font-display text-3xl font-bold text-foreground">100+</p>
+              <p className="text-muted-foreground text-sm">Clientes Satisfaites</p>
             </div>
             <div>
-              <p className="font-display text-3xl font-bold text-foreground">10+</p>
+              <p className="font-display text-3xl font-bold text-foreground">4+</p>
               <p className="text-muted-foreground text-sm">Années d'Expérience</p>
             </div>
             <div>

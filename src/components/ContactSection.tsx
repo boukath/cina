@@ -27,7 +27,7 @@ const ContactSection = () => {
         <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
           {/* Phone */}
           <motion.a
-            href="tel:+33600000000"
+            href="tel:+213XXXXXXXXX"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -41,7 +41,7 @@ const ContactSection = () => {
             <h3 className="font-display text-lg font-semibold text-foreground mb-2">
               Téléphone
             </h3>
-            <p className="text-muted-foreground">06 XX XX XX XX</p>
+            <p className="text-muted-foreground">0XX XX XX XX XX</p>
           </motion.a>
 
           {/* Email */}
@@ -77,7 +77,7 @@ const ContactSection = () => {
             <h3 className="font-display text-lg font-semibold text-foreground mb-2">
               Zone d'Intervention
             </h3>
-            <p className="text-muted-foreground">Île-de-France & environs</p>
+            <p className="text-muted-foreground">Birkhadem, Alger & environs</p>
           </motion.div>
         </div>
 

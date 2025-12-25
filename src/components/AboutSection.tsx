@@ -5,7 +5,7 @@ const features = [
   {
     icon: Award,
     title: "Expertise",
-    description: "Plus de 10 ans d'expérience dans la coiffure événementielle",
+    description: "Plus de 4 ans d'expérience dans la coiffure événementielle",
   },
   {
     icon: Heart,
@@ -44,14 +44,14 @@ const AboutSection = () => {
               <span className="text-gradient-rose">Hassina</span>
             </h2>
             <p className="text-muted-foreground mb-6 leading-relaxed">
-              Passionnée par la beauté et l'art de la coiffure depuis plus de 10 ans, 
-              je me suis spécialisée dans les coiffures de mariage et événementielles. 
+              Passionnée par la beauté et l'art de la coiffure depuis plus de 4 ans, 
+              je me suis spécialisée dans les coiffures de mariage, invitées et occasions spéciales. 
               Mon objectif est de sublimer chaque femme pour son jour spécial.
             </p>
             <p className="text-muted-foreground mb-8 leading-relaxed">
-              Chaque mariée est unique, et je m'engage à créer une coiffure qui 
-              reflète sa personnalité et s'harmonise parfaitement avec son style, 
-              sa robe et le thème de son mariage.
+              Chaque cliente est unique, et je m'engage à créer une coiffure qui 
+              reflète sa personnalité et s'harmonise parfaitement avec son style 
+              et le thème de son événement.
             </p>
 
             {/* Features Grid */}
