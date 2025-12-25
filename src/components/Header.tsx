@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -19,7 +20,9 @@ const Header = () => {
     { href: "#accueil", label: "Accueil" },
     { href: "#services", label: "Services" },
     { href: "#galerie", label: "Galerie" },
+    { href: "#temoignages", label: "Témoignages" },
     { href: "#apropos", label: "À Propos" },
+    { href: "#faq", label: "FAQ" },
     { href: "#contact", label: "Contact" },
   ];
 
@@ -45,12 +48,12 @@ const Header = () => {
         </motion.a>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-6">
           {navLinks.map((link) => (
             <motion.a
               key={link.href}
               href={link.href}
-              className="text-foreground/80 hover:text-primary transition-colors duration-300 font-medium"
+              className="text-foreground/80 hover:text-primary transition-colors duration-300 font-medium text-sm"
               whileHover={{ y: -2 }}
             >
               {link.label}
@@ -58,8 +61,9 @@ const Header = () => {
           ))}
         </div>
 
-        {/* CTA Button */}
-        <div className="hidden md:block">
+        {/* CTA Button & Language */}
+        <div className="hidden md:flex items-center gap-3">
+          <LanguageSwitcher />
           <Button variant="hero" size="default" asChild>
             <a href="#reservation">
               <Phone className="w-4 h-4 mr-2" />
@@ -99,7 +103,10 @@ const Header = () => {
                   {link.label}
                 </a>
               ))}
-              <Button variant="hero" size="lg" className="mt-4" asChild>
+              <div className="pt-4 border-t border-border/50">
+                <LanguageSwitcher />
+              </div>
+              <Button variant="hero" size="lg" className="mt-2" asChild>
                 <a href="#reservation" onClick={() => setIsMobileMenuOpen(false)}>
                   <Phone className="w-4 h-4 mr-2" />
                   Réserver

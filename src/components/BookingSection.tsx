@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const serviceOptions = [
   "Coiffure Mariée",
-  "Demoiselles d'Honneur",
+  "Coiffure Invitée",
   "Occasions Spéciales",
-  "Pack Complet",
+  "Pack Groupe",
   "Autre",
 ];
 
@@ -24,6 +25,7 @@ const BookingSection = () => {
     message: "",
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -34,7 +36,7 @@ const BookingSection = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate form
@@ -47,13 +49,43 @@ const BookingSection = () => {
       return;
     }
 
-    // Here you would normally send the data to a backend
-    console.log("Form submitted:", formData);
-    setIsSubmitted(true);
-    toast({
-      title: "Demande envoyée !",
-      description: "Je vous contacterai très rapidement pour confirmer votre rendez-vous.",
-    });
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.from("bookings").insert({
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email || null,
+        event_date: formData.date,
+        service: formData.service,
+        message: formData.message || null,
+      });
+
+      if (error) {
+        console.error("Error submitting booking:", error);
+        toast({
+          title: "Erreur",
+          description: "Une erreur est survenue. Veuillez réessayer.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsSubmitted(true);
+      toast({
+        title: "Demande envoyée !",
+        description: "Je vous contacterai très rapidement pour confirmer votre rendez-vous.",
+      });
+    } catch (error) {
+      console.error("Error:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isSubmitted) {
@@ -201,7 +233,7 @@ const BookingSection = () => {
                       type="tel"
                       value={formData.phone}
                       onChange={handleChange}
-                      placeholder="06 XX XX XX XX"
+                      placeholder="0XX XX XX XX XX"
                       className="h-12 rounded-xl"
                       required
                     />
@@ -275,8 +307,14 @@ const BookingSection = () => {
                 </div>
 
                 {/* Submit */}
-                <Button type="submit" variant="hero" size="lg" className="w-full">
-                  Envoyer ma demande
+                <Button 
+                  type="submit" 
+                  variant="hero" 
+                  size="lg" 
+                  className="w-full"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Envoi en cours..." : "Envoyer ma demande"}
                 </Button>
 
                 <p className="text-xs text-muted-foreground text-center">
