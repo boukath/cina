@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Euro } from 'lucide-react';
+import { Plus, Pencil, Trash2, Banknote } from 'lucide-react';
 
 interface Service {
   id: string;
@@ -147,7 +147,7 @@ export function ServicesManager() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
-          <Euro className="h-5 w-5" />
+          <Banknote className="h-5 w-5" />
           Gestion des Tarifs
         </CardTitle>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -183,7 +183,7 @@ export function ServicesManager() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="price">Prix (€)</Label>
+                  <Label htmlFor="price">Prix (DZD)</Label>
                   <Input
                     id="price"
                     type="number"
@@ -259,7 +259,7 @@ export function ServicesManager() {
                     )}
                   </div>
                 </TableCell>
-                <TableCell className="font-semibold">{service.price.toFixed(2)} €</TableCell>
+                <TableCell className="font-semibold">{Number(service.price).toLocaleString('fr-DZ')} DZD</TableCell>
                 <TableCell>{service.duration_minutes} min</TableCell>
                 <TableCell>
                   <span className={`px-2 py-1 rounded-full text-xs ${
