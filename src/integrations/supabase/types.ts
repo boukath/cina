@@ -21,11 +21,15 @@ export type Database = {
           event_date: string
           event_time: string | null
           id: string
+          invited_by: string | null
           message: string | null
           name: string
+          paid_amount: number | null
+          payment_method: string | null
           phone: string
           service: string
           status: string
+          stylist_id: string | null
           updated_at: string
         }
         Insert: {
@@ -34,11 +38,15 @@ export type Database = {
           event_date: string
           event_time?: string | null
           id?: string
+          invited_by?: string | null
           message?: string | null
           name: string
+          paid_amount?: number | null
+          payment_method?: string | null
           phone: string
           service: string
           status?: string
+          stylist_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -47,14 +55,26 @@ export type Database = {
           event_date?: string
           event_time?: string | null
           id?: string
+          invited_by?: string | null
           message?: string | null
           name?: string
+          paid_amount?: number | null
+          payment_method?: string | null
           phone?: string
           service?: string
           status?: string
+          stylist_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "bookings_stylist_id_fkey"
+            columns: ["stylist_id"]
+            isOneToOne: false
+            referencedRelation: "stylists"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gallery_images: {
         Row: {
@@ -128,6 +148,33 @@ export type Database = {
           name?: string
           price?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      stylists: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          name: string
+          phone: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          phone?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          phone?: string | null
         }
         Relationships: []
       }
