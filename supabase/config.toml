@@ -2,3 +2,6 @@ project_id = "hcnrucjufjrqcfiiqxzv"
 
 [functions.create-admin]
 verify_jwt = false
+
+[functions.blur-faces]
+verify_jwt = false
