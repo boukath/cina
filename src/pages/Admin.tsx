@@ -13,16 +13,15 @@ import {
   Eye,
   EyeOff,
   CalendarDays,
-  ListTodo
+  ListTodo,
+  LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import AvailabilityManager from "@/components/admin/AvailabilityManager";
-
-// Simple password protection (in production, use proper authentication)
-const ADMIN_PASSWORD = "cina2024";
+import type { User as SupabaseUser, Session } from "@supabase/supabase-js";
 
 type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
 
@@ -48,26 +47,128 @@ const statusConfig: Record<BookingStatus, { label: string; color: string; icon: 
 };
 
 const AdminPage = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState<BookingStatus | "all">("all");
   const [activeTab, setActiveTab] = useState<"bookings" | "availability">("bookings");
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Check admin role
+  const checkAdminRole = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (error) throw error;
+      return !!data;
+    } catch (error) {
+      console.error("Error checking admin role:", error);
+      return false;
+    }
+  };
+
+  // Initialize auth state
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Check admin role after auth state change
+        if (session?.user) {
+          setTimeout(() => {
+            checkAdminRole(session.user.id).then(setIsAdmin);
+          }, 0);
+        } else {
+          setIsAdmin(false);
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        checkAdminRole(session.user.id).then((hasRole) => {
+          setIsAdmin(hasRole);
+          setIsCheckingAuth(false);
+        });
+      } else {
+        setIsCheckingAuth(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      setIsAuthenticated(true);
-      toast({ title: "Connecté", description: "Bienvenue Hassina !" });
-    } else {
+    
+    if (!email.trim() || !password.trim()) {
       toast({ 
         title: "Erreur", 
-        description: "Mot de passe incorrect", 
+        description: "Veuillez remplir tous les champs", 
         variant: "destructive" 
       });
+      return;
     }
+
+    setIsLoggingIn(true);
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim(),
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        const hasAdminRole = await checkAdminRole(data.user.id);
+        
+        if (!hasAdminRole) {
+          await supabase.auth.signOut();
+          toast({ 
+            title: "Accès refusé", 
+            description: "Vous n'avez pas les droits administrateur", 
+            variant: "destructive" 
+          });
+          return;
+        }
+        
+        setIsAdmin(true);
+        toast({ title: "Connecté", description: "Bienvenue dans l'espace admin !" });
+      }
+    } catch (error: any) {
+      console.error("Login error:", error);
+      toast({ 
+        title: "Erreur de connexion", 
+        description: error.message || "Email ou mot de passe incorrect", 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsAdmin(false);
+    toast({ title: "Déconnecté", description: "À bientôt !" });
   };
 
   const fetchBookings = async () => {
@@ -119,7 +220,7 @@ const AdminPage = () => {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (user && isAdmin) {
       fetchBookings();
 
       // Subscribe to realtime updates
@@ -138,7 +239,7 @@ const AdminPage = () => {
         supabase.removeChannel(channel);
       };
     }
-  }, [isAuthenticated]);
+  }, [user, isAdmin]);
 
   const filteredBookings = filter === "all" 
     ? bookings 
@@ -151,7 +252,17 @@ const AdminPage = () => {
     completed: bookings.filter((b) => b.status === "completed").length,
   };
 
-  if (!isAuthenticated) {
+  // Show loading while checking auth
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Show login form if not authenticated or not admin
+  if (!user || !isAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <motion.div
@@ -173,6 +284,16 @@ const AdminPage = () => {
             </div>
 
             <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
+                  className="h-12 rounded-xl"
+                  autoComplete="email"
+                />
+              </div>
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
@@ -180,6 +301,7 @@ const AdminPage = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Mot de passe"
                   className="h-12 rounded-xl pr-12"
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
@@ -189,8 +311,8 @@ const AdminPage = () => {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              <Button type="submit" variant="hero" className="w-full">
-                Se connecter
+              <Button type="submit" variant="hero" className="w-full" disabled={isLoggingIn}>
+                {isLoggingIn ? "Connexion..." : "Se connecter"}
               </Button>
             </form>
 
@@ -217,10 +339,14 @@ const AdminPage = () => {
             <p className="text-sm text-muted-foreground">Espace Admin</p>
           </div>
           <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground hidden md:block">
+              {user.email}
+            </span>
             <Button variant="outline" onClick={fetchBookings} disabled={isLoading}>
               {isLoading ? "Chargement..." : "Actualiser"}
             </Button>
-            <Button variant="ghost" onClick={() => setIsAuthenticated(false)}>
+            <Button variant="ghost" onClick={handleLogout}>
+              <LogOut className="w-4 h-4 mr-2" />
               Déconnexion
             </Button>
           </div>
@@ -297,137 +423,137 @@ const AdminPage = () => {
               ))}
             </div>
 
-        {/* Bookings List */}
-        <div className="space-y-4">
-          {filteredBookings.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              Aucune réservation {filter !== "all" ? statusConfig[filter].label.toLowerCase() : ""}
-            </div>
-          ) : (
-            filteredBookings.map((booking) => {
-              const StatusIcon = statusConfig[booking.status].icon;
-              return (
-                <motion.div
-                  key={booking.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-card rounded-2xl p-6 border border-border/50 shadow-soft"
-                >
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${statusConfig[booking.status].color}`}>
-                          <StatusIcon className="w-3.5 h-3.5" />
-                          {statusConfig[booking.status].label}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          {new Date(booking.created_at).toLocaleDateString("fr-FR")}
-                        </span>
-                      </div>
+            {/* Bookings List */}
+            <div className="space-y-4">
+              {filteredBookings.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  Aucune réservation {filter !== "all" ? statusConfig[filter].label.toLowerCase() : ""}
+                </div>
+              ) : (
+                filteredBookings.map((booking) => {
+                  const StatusIcon = statusConfig[booking.status].icon;
+                  return (
+                    <motion.div
+                      key={booking.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-card rounded-2xl p-6 border border-border/50 shadow-soft"
+                    >
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${statusConfig[booking.status].color}`}>
+                              <StatusIcon className="w-3.5 h-3.5" />
+                              {statusConfig[booking.status].label}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {new Date(booking.created_at).toLocaleDateString("fr-FR")}
+                            </span>
+                          </div>
 
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-foreground">
-                            <User className="w-4 h-4 text-primary" />
-                            <span className="font-semibold">{booking.name}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Phone className="w-4 h-4" />
-                            <a href={`tel:${booking.phone}`} className="hover:text-primary">
-                              {booking.phone}
-                            </a>
-                          </div>
-                          {booking.email && (
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Mail className="w-4 h-4" />
-                              <a href={`mailto:${booking.email}`} className="hover:text-primary">
-                                {booking.email}
-                              </a>
+                          <div className="grid md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-foreground">
+                                <User className="w-4 h-4 text-primary" />
+                                <span className="font-semibold">{booking.name}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <Phone className="w-4 h-4" />
+                                <a href={`tel:${booking.phone}`} className="hover:text-primary">
+                                  {booking.phone}
+                                </a>
+                              </div>
+                              {booking.email && (
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                  <Mail className="w-4 h-4" />
+                                  <a href={`mailto:${booking.email}`} className="hover:text-primary">
+                                    {booking.email}
+                                  </a>
+                                </div>
+                              )}
                             </div>
+
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-foreground">
+                                <Calendar className="w-4 h-4 text-primary" />
+                                <span>{new Date(booking.event_date).toLocaleDateString("fr-FR", { 
+                                  weekday: "long", 
+                                  year: "numeric", 
+                                  month: "long", 
+                                  day: "numeric" 
+                                })}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-foreground">
+                                <Clock className="w-4 h-4 text-primary" />
+                                <span>
+                                  {booking.event_time 
+                                    ? booking.event_time.slice(0, 5) 
+                                    : "Heure non spécifiée"}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <span className="text-sm bg-secondary/50 px-2 py-1 rounded">{booking.service}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {booking.message && (
+                            <p className="mt-3 text-sm text-muted-foreground bg-secondary/30 rounded-lg p-3">
+                              {booking.message}
+                            </p>
                           )}
                         </div>
 
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-foreground">
-                            <Calendar className="w-4 h-4 text-primary" />
-                            <span>{new Date(booking.event_date).toLocaleDateString("fr-FR", { 
-                              weekday: "long", 
-                              year: "numeric", 
-                              month: "long", 
-                              day: "numeric" 
-                            })}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-foreground">
-                            <Clock className="w-4 h-4 text-primary" />
-                            <span>
-                              {booking.event_time 
-                                ? booking.event_time.slice(0, 5) 
-                                : "Heure non spécifiée"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <span className="text-sm bg-secondary/50 px-2 py-1 rounded">{booking.service}</span>
-                          </div>
+                        {/* Actions */}
+                        <div className="flex flex-wrap gap-2">
+                          {booking.status === "pending" && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-green-600 border-green-200 hover:bg-green-50"
+                                onClick={() => updateBookingStatus(booking.id, "confirmed")}
+                              >
+                                <CheckCircle className="w-4 h-4 mr-1" />
+                                Confirmer
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-red-600 border-red-200 hover:bg-red-50"
+                                onClick={() => updateBookingStatus(booking.id, "cancelled")}
+                              >
+                                <XCircle className="w-4 h-4 mr-1" />
+                                Annuler
+                              </Button>
+                            </>
+                          )}
+                          {booking.status === "confirmed" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                              onClick={() => updateBookingStatus(booking.id, "completed")}
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Terminer
+                            </Button>
+                          )}
+                          <a
+                            href={`https://wa.me/213${booking.phone.replace(/\D/g, "").slice(-9)}?text=Bonjour ${booking.name}, concernant votre réservation du ${new Date(booking.event_date).toLocaleDateString("fr-FR")}...`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md bg-[#25D366] text-white hover:bg-[#20bd5a] transition-colors"
+                          >
+                            WhatsApp
+                          </a>
                         </div>
                       </div>
-
-                      {booking.message && (
-                        <p className="mt-3 text-sm text-muted-foreground bg-secondary/30 rounded-lg p-3">
-                          {booking.message}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex flex-wrap gap-2">
-                      {booking.status === "pending" && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-green-600 border-green-200 hover:bg-green-50"
-                            onClick={() => updateBookingStatus(booking.id, "confirmed")}
-                          >
-                            <CheckCircle className="w-4 h-4 mr-1" />
-                            Confirmer
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-red-600 border-red-200 hover:bg-red-50"
-                            onClick={() => updateBookingStatus(booking.id, "cancelled")}
-                          >
-                            <XCircle className="w-4 h-4 mr-1" />
-                            Annuler
-                          </Button>
-                        </>
-                      )}
-                      {booking.status === "confirmed" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                          onClick={() => updateBookingStatus(booking.id, "completed")}
-                        >
-                          <CheckCircle className="w-4 h-4 mr-1" />
-                          Terminer
-                        </Button>
-                      )}
-                      <a
-                        href={`https://wa.me/213${booking.phone.replace(/\D/g, "").slice(-9)}?text=Bonjour ${booking.name}, concernant votre réservation du ${new Date(booking.event_date).toLocaleDateString("fr-FR")}...`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md bg-[#25D366] text-white hover:bg-[#20bd5a] transition-colors"
-                      >
-                        WhatsApp
-                      </a>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })
-          )}
-        </div>
+                    </motion.div>
+                  );
+                })
+              )}
+            </div>
           </>
         )}
       </main>
