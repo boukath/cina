@@ -1,41 +1,53 @@
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { BeforeAfterSlider } from "./BeforeAfterSlider";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-interface Transformation {
-  id: number;
-  beforeImage: string;
-  afterImage: string;
-  title: string;
-  description: string;
-}
-
-const transformations: Transformation[] = [
-  {
-    id: 1,
-    beforeImage: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&h=800&fit=crop",
-    afterImage: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&h=800&fit=crop",
-    title: "Transformation Mariée",
-    description: "Chignon élégant pour le grand jour",
-  },
-  {
-    id: 2,
-    beforeImage: "https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?w=600&h=800&fit=crop",
-    afterImage: "https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=600&h=800&fit=crop",
-    title: "Coiffure de Soirée",
-    description: "Ondulations glamour pour une occasion spéciale",
-  },
-  {
-    id: 3,
-    beforeImage: "https://images.unsplash.com/photo-1596178060671-7a80dc8059ea?w=600&h=800&fit=crop",
-    afterImage: "https://images.unsplash.com/photo-1605980776566-0486c3ac7617?w=600&h=800&fit=crop",
-    title: "Tresses Artistiques",
-    description: "Coiffure tressée pour un événement festif",
-  },
-];
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const BeforeAfterSection = () => {
   const { t } = useLanguage();
+
+  const { data: transformations, isLoading } = useQuery({
+    queryKey: ['gallery-transformations'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gallery_images')
+        .select('*')
+        .not('before_image_url', 'is', null)
+        .not('after_image_url', 'is', null)
+        .order('display_order', { ascending: true });
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <section id="transformations" className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <Skeleton className="h-10 w-64 mx-auto mb-4" />
+            <Skeleton className="h-6 w-96 mx-auto" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="space-y-4">
+                <Skeleton className="aspect-[3/4] rounded-xl" />
+                <Skeleton className="h-6 w-48 mx-auto" />
+                <Skeleton className="h-4 w-32 mx-auto" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!transformations || transformations.length === 0) {
+    return null;
+  }
 
   return (
     <section id="transformations" className="py-20 bg-muted/30">
@@ -67,16 +79,18 @@ export const BeforeAfterSection = () => {
               className="space-y-4"
             >
               <BeforeAfterSlider
-                beforeImage={transformation.beforeImage}
-                afterImage={transformation.afterImage}
+                beforeImage={transformation.before_image_url!}
+                afterImage={transformation.after_image_url!}
               />
               <div className="text-center">
                 <h3 className="font-display text-lg font-semibold text-foreground">
-                  {transformation.title}
+                  {transformation.title || 'Transformation'}
                 </h3>
-                <p className="text-muted-foreground text-sm">
-                  {transformation.description}
-                </p>
+                {transformation.description && (
+                  <p className="text-muted-foreground text-sm">
+                    {transformation.description}
+                  </p>
+                )}
               </div>
             </motion.div>
           ))}
