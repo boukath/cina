@@ -7,7 +7,7 @@ const services = [
     title: "Coiffure Mariée",
     description: "Un look parfait pour votre grand jour. Chignons, tresses, boucles romantiques.",
     price: "Sur consultation",
-    features: ["Essai coiffure inclus", "Retouches le jour J", "Accessoires conseillés"],
+    features: ["Coiffure personnalisée", "Retouches le jour J", "Accessoires conseillés"],
   },
   {
     icon: Heart,

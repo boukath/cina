@@ -12,8 +12,8 @@ const faqs = [
     answer: "Vous pouvez me contacter via le formulaire sur ce site, par téléphone ou WhatsApp. Je vous réponds sous 24h pour confirmer votre rendez-vous et discuter de vos envies.",
   },
   {
-    question: "Proposez-vous un essai coiffure avant le jour J ?",
-    answer: "Oui, pour les mariées, un essai coiffure est inclus dans la prestation. Cela nous permet de définir ensemble le style parfait pour votre grand jour.",
+    question: "Comment se déroule une prestation mariée ?",
+    answer: "Je prends le temps de discuter avec vous de vos envies et de votre style. Le jour J, je m'occupe de tout pour que vous soyez parfaite.",
   },
   {
     question: "Vous déplacez-vous à domicile ?",
@@ -21,7 +21,7 @@ const faqs = [
   },
   {
     question: "Quand dois-je réserver pour mon mariage ?",
-    answer: "Je recommande de réserver au moins 1 à 2 mois à l'avance pour les mariages, surtout en haute saison (mai à septembre). Cela nous laisse le temps de faire l'essai coiffure.",
+    answer: "Je recommande de réserver au moins 1 à 2 mois à l'avance pour les mariages, surtout en haute saison (mai à septembre).",
   },
   {
     question: "Faites-vous les coiffures pour les invitées aussi ?",
