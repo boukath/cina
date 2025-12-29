@@ -47,7 +47,9 @@ serve(async (req) => {
             content: [
               {
                 type: "text",
-                text: `Analyze this image and detect all human faces. For each face found, provide the bounding box coordinates as percentages of the image dimensions (0-100).
+                text: `Analyze this image and detect all human faces. For each face found, provide bounding box coordinates for ONLY the facial features area (eyes, nose, and mouth) - DO NOT include the forehead, hair, ears, or chin area.
+
+The region should start just above the eyebrows and end just below the lips. It should only cover the central facial features, not the full face oval.
 
 Return ONLY a valid JSON object with this exact structure, no other text:
 {
@@ -56,8 +58,9 @@ Return ONLY a valid JSON object with this exact structure, no other text:
   ]
 }
 
-Where x,y is the top-left corner of the face bounding box, and width,height are the dimensions.
+Where x,y is the top-left corner of the facial features region (eyes to mouth area only), and width,height are the dimensions.
 All values should be percentages (0-100) of the image size.
+The height should typically be about 40-50% of a full face height since we're only covering eyes to mouth.
 If no faces are detected, return: {"faces": []}`
               },
               {
