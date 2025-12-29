@@ -1,5 +1,12 @@
 import { supabase } from '@/integrations/supabase/client';
 
+interface FaceBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 /**
  * Converts a File to base64 string
  */
@@ -16,21 +23,101 @@ async function fileToBase64(file: File): Promise<string> {
 }
 
 /**
- * Converts base64 data URL to a File object
+ * Loads an image from a File object
  */
-function base64ToFile(base64: string, filename: string, mimeType: string): File {
-  const arr = base64.split(',');
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n);
-  }
-  return new File([u8arr], filename, { type: mimeType });
+function loadImage(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
 }
 
 /**
- * Blurs faces in an image using AI via edge function
+ * Applies blur to specified regions of an image
+ */
+function applyBlurToRegions(
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+  faces: FaceBox[]
+): void {
+  const { width, height } = canvas;
+  
+  for (const face of faces) {
+    // Convert percentage coordinates to pixels
+    const x = Math.floor((face.x / 100) * width);
+    const y = Math.floor((face.y / 100) * height);
+    const w = Math.floor((face.width / 100) * width);
+    const h = Math.floor((face.height / 100) * height);
+    
+    // Ensure we're within bounds
+    const safeX = Math.max(0, x);
+    const safeY = Math.max(0, y);
+    const safeW = Math.min(w, width - safeX);
+    const safeH = Math.min(h, height - safeY);
+    
+    if (safeW <= 0 || safeH <= 0) continue;
+    
+    // Get the face region
+    const imageData = ctx.getImageData(safeX, safeY, safeW, safeH);
+    const data = imageData.data;
+    
+    // Apply a strong pixelation blur effect
+    const pixelSize = Math.max(10, Math.floor(Math.min(safeW, safeH) / 8));
+    
+    for (let py = 0; py < safeH; py += pixelSize) {
+      for (let px = 0; px < safeW; px += pixelSize) {
+        // Calculate average color for this block
+        let r = 0, g = 0, b = 0, count = 0;
+        
+        for (let dy = 0; dy < pixelSize && py + dy < safeH; dy++) {
+          for (let dx = 0; dx < pixelSize && px + dx < safeW; dx++) {
+            const i = ((py + dy) * safeW + (px + dx)) * 4;
+            r += data[i];
+            g += data[i + 1];
+            b += data[i + 2];
+            count++;
+          }
+        }
+        
+        r = Math.floor(r / count);
+        g = Math.floor(g / count);
+        b = Math.floor(b / count);
+        
+        // Apply average color to all pixels in block
+        for (let dy = 0; dy < pixelSize && py + dy < safeH; dy++) {
+          for (let dx = 0; dx < pixelSize && px + dx < safeW; dx++) {
+            const i = ((py + dy) * safeW + (px + dx)) * 4;
+            data[i] = r;
+            data[i + 1] = g;
+            data[i + 2] = b;
+          }
+        }
+      }
+    }
+    
+    ctx.putImageData(imageData, safeX, safeY);
+  }
+}
+
+/**
+ * Converts canvas to File object
+ */
+function canvasToFile(canvas: HTMLCanvasElement, filename: string, mimeType: string): Promise<File> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(new File([blob], filename, { type: mimeType }));
+      } else {
+        reject(new Error('Failed to convert canvas to blob'));
+      }
+    }, mimeType, 0.92);
+  });
+}
+
+/**
+ * Blurs faces in an image using AI detection via edge function
  */
 export async function blurFacesInImage(file: File): Promise<File> {
   try {
@@ -39,7 +126,7 @@ export async function blurFacesInImage(file: File): Promise<File> {
     // Convert file to base64
     const base64Image = await fileToBase64(file);
     
-    // Call edge function to process the image
+    // Call edge function to detect faces
     const { data, error } = await supabase.functions.invoke('blur-faces', {
       body: { 
         image: base64Image,
@@ -52,17 +139,40 @@ export async function blurFacesInImage(file: File): Promise<File> {
       return file; // Return original on error
     }
     
-    if (data?.processedImage) {
-      console.log('Face blur completed successfully');
-      return base64ToFile(
-        data.processedImage, 
-        file.name, 
-        file.type || 'image/jpeg'
-      );
+    const faces: FaceBox[] = data?.faces || [];
+    
+    if (faces.length === 0) {
+      console.log('No faces detected');
+      return file;
     }
     
-    console.log('No faces detected or processing skipped');
-    return file;
+    console.log(`Detected ${faces.length} face(s), applying blur...`);
+    
+    // Load the image
+    const img = await loadImage(file);
+    
+    // Create canvas and draw image
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) {
+      console.error('Failed to get canvas context');
+      return file;
+    }
+    
+    ctx.drawImage(img, 0, 0);
+    
+    // Apply blur to detected face regions
+    applyBlurToRegions(canvas, ctx, faces);
+    
+    // Convert back to file
+    const blurredFile = await canvasToFile(canvas, file.name, file.type || 'image/jpeg');
+    
+    console.log('Face blur completed successfully');
+    return blurredFile;
+    
   } catch (error) {
     console.error('Error in blurFacesInImage:', error);
     return file; // Return original on error
