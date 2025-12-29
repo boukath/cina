@@ -36,6 +36,7 @@ import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 import { StylistsManager } from "@/components/admin/StylistsManager";
 import { TestimonialsManager } from "@/components/admin/TestimonialsManager";
 import SettingsManager from "@/components/admin/SettingsManager";
+import { NotificationsPanel } from "@/components/admin/NotificationsPanel";
 import type { User as SupabaseUser, Session } from "@supabase/supabase-js";
 
 type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
@@ -350,6 +351,7 @@ const AdminPage = () => {
             <span className="text-sm text-muted-foreground hidden md:block">
               {user.email}
             </span>
+            <NotificationsPanel />
             <Button variant="outline" onClick={fetchBookings} disabled={isLoading}>
               {isLoading ? "Chargement..." : "Actualiser"}
             </Button>
