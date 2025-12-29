@@ -41,7 +41,7 @@ const AboutSection = () => {
             </span>
             <h2 className="font-display text-3xl md:text-5xl font-bold text-foreground mt-2 mb-6">
               Bonjour, je suis{" "}
-              <span className="text-gradient-rose">Hassina</span>
+              <span className="text-gradient-rose">Cina</span>
             </h2>
             <p className="text-muted-foreground mb-6 leading-relaxed">
               Passionnée par la beauté et l'art de la coiffure depuis plus de 4 ans, 
