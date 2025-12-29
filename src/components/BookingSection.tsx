@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Clock, User, Phone, Mail, MessageSquare, CheckCircle } from "lucide-react";
+import { Calendar, Clock, User, Phone, Mail, MessageSquare, CheckCircle, X, Users } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import DateTimePicker from "./DateTimePicker";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Service {
   id: string;
@@ -17,14 +18,24 @@ interface Service {
   duration_minutes: number | null;
 }
 
+interface SelectedService {
+  serviceId: string;
+  serviceName: string;
+  personName: string;
+  price: number;
+  duration: number;
+}
+
 const BookingSection = () => {
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
     email: "",
-    service: "",
     message: "",
   });
+  const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
+  const [currentServiceId, setCurrentServiceId] = useState("");
+  const [currentPersonName, setCurrentPersonName] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -48,7 +59,38 @@ const BookingSection = () => {
     fetchServices();
   }, []);
 
-  const selectedService = services.find(s => s.name === formData.service);
+  const addService = () => {
+    if (!currentServiceId || !currentPersonName.trim()) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un service et entrer le nom de la personne.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const service = services.find(s => s.id === currentServiceId);
+    if (!service) return;
+
+    setSelectedServices(prev => [
+      ...prev,
+      {
+        serviceId: service.id,
+        serviceName: service.name,
+        personName: currentPersonName.trim(),
+        price: service.price,
+        duration: service.duration_minutes || 60,
+      }
+    ]);
+    setCurrentServiceId("");
+    setCurrentPersonName("");
+  };
+
+  const removeService = (index: number) => {
+    setSelectedServices(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
+  const totalDuration = selectedServices.reduce((sum, s) => sum + s.duration, 0);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -63,10 +105,10 @@ const BookingSection = () => {
     e.preventDefault();
     
     // Validate form
-    if (!formData.name || !formData.phone || !selectedDate || !selectedTime || !formData.service) {
+    if (!formData.name || !formData.phone || !selectedDate || !selectedTime || selectedServices.length === 0) {
       toast({
         title: "Erreur",
-        description: "Veuillez remplir tous les champs obligatoires et sélectionner un créneau.",
+        description: "Veuillez remplir tous les champs obligatoires, ajouter au moins un service et sélectionner un créneau.",
         variant: "destructive",
       });
       return;
@@ -77,6 +119,11 @@ const BookingSection = () => {
     try {
       const eventDate = format(selectedDate, "yyyy-MM-dd");
       const eventTime = selectedTime + ":00";
+      
+      // Format services for storage
+      const servicesText = selectedServices
+        .map(s => `${s.personName}: ${s.serviceName}`)
+        .join(" | ");
 
       const { error } = await supabase.from("bookings").insert({
         name: formData.name,
@@ -84,7 +131,7 @@ const BookingSection = () => {
         email: formData.email || null,
         event_date: eventDate,
         event_time: eventTime,
-        service: formData.service,
+        service: servicesText,
         message: formData.message || null,
       });
 
@@ -105,10 +152,13 @@ const BookingSection = () => {
             name: formData.name,
             phone: formData.phone,
             email: formData.email || undefined,
-            service: formData.service,
+            service: servicesText,
             event_date: eventDate,
             event_time: selectedTime,
             message: formData.message || undefined,
+            totalPrice,
+            totalDuration,
+            servicesDetails: selectedServices,
           },
         });
         console.log("Admin notification sent successfully");
@@ -161,9 +211,9 @@ const BookingSection = () => {
                   name: "",
                   phone: "",
                   email: "",
-                  service: "",
                   message: "",
                 });
+                setSelectedServices([]);
                 setSelectedDate(null);
                 setSelectedTime(null);
               }}
@@ -301,50 +351,85 @@ const BookingSection = () => {
                   </div>
                 </div>
 
-                {/* Service Selection */}
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">
-                    Service *
+                {/* Multi-Person Service Selection */}
+                <div className="space-y-4">
+                  <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <Users className="w-4 h-4" />
+                    Services (ajoutez une personne et son service) *
                   </label>
-                  <select
-                    name="service"
-                    value={formData.service}
-                    onChange={handleChange}
-                    className="w-full h-12 px-4 rounded-xl border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                    required
-                    disabled={loadingServices}
-                  >
-                    <option value="">
-                      {loadingServices ? "Chargement..." : "Choisir un service..."}
-                    </option>
-                    {services.map((service) => (
-                      <option key={service.id} value={service.name}>
-                        {service.name} - {Number(service.price).toLocaleString('fr-DZ')} DZD
-                      </option>
-                    ))}
-                  </select>
                   
-                  {/* Price Display */}
-                  {selectedService && (
+                  {/* Add service form */}
+                  <div className="p-4 bg-secondary/30 rounded-xl space-y-3">
+                    <Input
+                      placeholder="Nom de la personne (ex: Marie, Maman...)"
+                      value={currentPersonName}
+                      onChange={(e) => setCurrentPersonName(e.target.value)}
+                      className="h-12 rounded-xl"
+                    />
+                    <select
+                      value={currentServiceId}
+                      onChange={(e) => setCurrentServiceId(e.target.value)}
+                      className="w-full h-12 px-4 rounded-xl border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                      disabled={loadingServices}
+                    >
+                      <option value="">
+                        {loadingServices ? "Chargement..." : "Choisir un service..."}
+                      </option>
+                      {services.map((service) => (
+                        <option key={service.id} value={service.id}>
+                          {service.name} - {Number(service.price).toLocaleString('fr-DZ')} DZD
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addService}
+                      className="w-full"
+                    >
+                      + Ajouter cette personne
+                    </Button>
+                  </div>
+
+                  {/* Selected services list */}
+                  {selectedServices.length > 0 && (
                     <motion.div
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="mt-3 p-4 rounded-xl bg-primary/10 border border-primary/20"
+                      className="space-y-2"
                     >
-                      <div className="flex items-center justify-between">
+                      {selectedServices.map((s, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 rounded-xl bg-primary/10 border border-primary/20"
+                        >
+                          <div>
+                            <p className="font-semibold text-foreground">{s.personName}</p>
+                            <p className="text-sm text-muted-foreground">{s.serviceName}</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-primary">
+                              {Number(s.price).toLocaleString('fr-DZ')} DZD
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => removeService(index)}
+                              className="p-1 hover:bg-destructive/20 rounded-full transition-colors"
+                            >
+                              <X className="w-4 h-4 text-destructive" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {/* Total */}
+                      <div className="flex items-center justify-between p-4 rounded-xl bg-primary/20 border border-primary/30">
                         <div>
-                          <p className="font-semibold text-foreground">{selectedService.name}</p>
-                          {selectedService.description && (
-                            <p className="text-sm text-muted-foreground">{selectedService.description}</p>
-                          )}
-                          {selectedService.duration_minutes && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Durée estimée: {selectedService.duration_minutes} min
-                            </p>
-                          )}
+                          <p className="font-bold text-foreground">Total ({selectedServices.length} personne{selectedServices.length > 1 ? 's' : ''})</p>
+                          <p className="text-sm text-muted-foreground">Durée estimée: {totalDuration} min</p>
                         </div>
                         <div className="text-xl font-bold text-primary">
-                          {Number(selectedService.price).toLocaleString('fr-DZ')} DZD
+                          {Number(totalPrice).toLocaleString('fr-DZ')} DZD
                         </div>
                       </div>
                     </motion.div>

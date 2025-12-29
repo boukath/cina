@@ -5,6 +5,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+interface ServiceDetail {
+  serviceId: string;
+  serviceName: string;
+  personName: string;
+  price: number;
+  duration: number;
+}
+
 interface BookingNotification {
   name: string;
   phone: string;
@@ -13,6 +21,9 @@ interface BookingNotification {
   event_date: string;
   event_time: string;
   message?: string;
+  totalPrice?: number;
+  totalDuration?: number;
+  servicesDetails?: ServiceDetail[];
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -33,15 +44,25 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Format services details if available
+    let servicesSection = `💇 *Service:* ${booking.service}`;
+    if (booking.servicesDetails && booking.servicesDetails.length > 0) {
+      servicesSection = `💇 *Services:*\n${booking.servicesDetails.map(s => 
+        `   • ${s.personName}: ${s.serviceName} (${Number(s.price).toLocaleString('fr-DZ')} DZD)`
+      ).join('\n')}`;
+    }
+
     // Format the WhatsApp message
     const message = `🔔 *Nouvelle Réservation!*
 
 👤 *Client:* ${booking.name}
 📞 *Téléphone:* ${booking.phone}
 ${booking.email ? `📧 *Email:* ${booking.email}` : ""}
-💇 *Service:* ${booking.service}
+${servicesSection}
 📅 *Date:* ${booking.event_date}
 ⏰ *Heure:* ${booking.event_time}
+${booking.totalPrice ? `💰 *Total:* ${Number(booking.totalPrice).toLocaleString('fr-DZ')} DZD` : ""}
+${booking.totalDuration ? `⏱ *Durée estimée:* ${booking.totalDuration} min` : ""}
 ${booking.message ? `💬 *Message:* ${booking.message}` : ""}
 
 Connectez-vous au panneau admin pour gérer cette réservation.`;
