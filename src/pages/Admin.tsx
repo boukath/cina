@@ -18,7 +18,8 @@ import {
   Banknote,
   Image,
   BarChart3,
-  Scissors
+  Scissors,
+  MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ import { BookingEditDialog } from "@/components/admin/BookingEditDialog";
 import { CompleteBookingDialog } from "@/components/admin/CompleteBookingDialog";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 import { StylistsManager } from "@/components/admin/StylistsManager";
+import { TestimonialsManager } from "@/components/admin/TestimonialsManager";
 import type { User as SupabaseUser, Session } from "@supabase/supabase-js";
 
 type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
@@ -69,7 +71,7 @@ const AdminPage = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState<BookingStatus | "all">("all");
-  const [activeTab, setActiveTab] = useState<"bookings" | "availability" | "services" | "gallery" | "analytics" | "stylists">("bookings");
+  const [activeTab, setActiveTab] = useState<"bookings" | "availability" | "services" | "gallery" | "analytics" | "stylists" | "testimonials">("bookings");
 
   // Check admin role
   const checkAdminRole = async (userId: string) => {
@@ -419,6 +421,17 @@ const AdminPage = () => {
             Coiffeuses
           </button>
           <button
+            onClick={() => setActiveTab("testimonials")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors ${
+              activeTab === "testimonials"
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary/50 text-foreground hover:bg-secondary"
+            }`}
+          >
+            <MessageSquare className="w-4 h-4" />
+            Témoignages
+          </button>
+          <button
             onClick={() => setActiveTab("analytics")}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors ${
               activeTab === "analytics"
@@ -433,6 +446,10 @@ const AdminPage = () => {
 
         {activeTab === "analytics" ? (
           <AnalyticsDashboard />
+        ) : activeTab === "testimonials" ? (
+          <div className="bg-card rounded-2xl p-6 border border-border/50">
+            <TestimonialsManager />
+          </div>
         ) : activeTab === "stylists" ? (
           <StylistsManager />
         ) : activeTab === "availability" ? (
