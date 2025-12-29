@@ -171,7 +171,7 @@ const translations: Record<Language, Record<string, string>> = {
     // About
     "about.subtitle": "حولنا",
     "about.title": "مرحباً، أنا",
-    "about.name": "حسينة",
+    "about.name": "سينا",
     "about.description1": "شغوفة بالجمال وفن تصفيف الشعر منذ أكثر من 4 سنوات، تخصصت في تسريحات الأعراس والمدعوات والمناسبات الخاصة. هدفي هو إبراز جمال كل امرأة في يومها المميز.",
     "about.description2": "كل عميلة فريدة، وأحرص على إنشاء تسريحة تعكس شخصيتها وتتناغم تماماً مع أسلوبها وموضوع مناسبتها.",
     "about.expertise": "الخبرة",
@@ -210,8 +210,8 @@ const translations: Record<Language, Record<string, string>> = {
     "booking.description": "املئي النموذج أدناه وسأتواصل معك في أقرب وقت لتأكيد موعدك ومناقشة رغباتك.",
     "booking.availability": "التوفر",
     "booking.availability.desc": "من الاثنين إلى الأحد، بموعد مسبق",
-    "booking.trial": "تجربة التسريحة",
-    "booking.trial.desc": "تجربة مجانية لتسريحات العروس",
+    "booking.trial": "خدمة سريعة",
+    "booking.trial.desc": "تأكيد خلال 24 ساعة",
     "booking.direct": "تواصل مباشر",
     "booking.direct.desc": "رد خلال 24 ساعة مضمون",
     "booking.name": "الاسم الكامل",
@@ -238,7 +238,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Footer
     "footer.rights": "جميع الحقوق محفوظة.",
     "footer.made": "صنع بـ",
-    "footer.for": "لحسينة",
+    "footer.for": "لسينا",
   },
 };
 
