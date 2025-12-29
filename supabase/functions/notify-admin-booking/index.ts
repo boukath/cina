@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,13 +35,31 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const booking: BookingNotification = await req.json();
-    const adminPhone = Deno.env.get("ADMIN_WHATSAPP_NUMBER");
+    
+    // Create Supabase client with service role to read settings
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get admin phone from settings table
+    const { data: settingData, error: settingError } = await supabase
+      .from("settings")
+      .select("value")
+      .eq("key", "admin_whatsapp_number")
+      .maybeSingle();
+
+    if (settingError) {
+      console.error("Error fetching admin phone from settings:", settingError);
+    }
+
+    // Fallback to environment variable if not in database
+    const adminPhone = settingData?.value || Deno.env.get("ADMIN_WHATSAPP_NUMBER");
 
     if (!adminPhone) {
-      console.error("ADMIN_WHATSAPP_NUMBER not configured");
+      console.error("Admin WhatsApp number not configured");
       return new Response(
-        JSON.stringify({ error: "Admin phone not configured" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        JSON.stringify({ error: "Admin phone not configured", message: "Please set the admin WhatsApp number in settings" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
