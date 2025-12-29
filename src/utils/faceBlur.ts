@@ -104,15 +104,21 @@ function applyBlurToRegions(
 /**
  * Converts canvas to File object
  */
-function canvasToFile(canvas: HTMLCanvasElement, filename: string, mimeType: string): Promise<File> {
+function canvasToFile(canvas: HTMLCanvasElement, filename: string, originalMimeType: string): Promise<File> {
   return new Promise((resolve, reject) => {
+    // Always use JPEG for output (better compatibility and smaller size)
+    const outputMimeType = 'image/jpeg';
+    const outputFilename = filename.replace(/\.[^/.]+$/, '.jpg');
+    
     canvas.toBlob((blob) => {
-      if (blob) {
-        resolve(new File([blob], filename, { type: mimeType }));
+      if (blob && blob.size > 0) {
+        console.log(`Created blob: ${blob.size} bytes, type: ${blob.type}`);
+        resolve(new File([blob], outputFilename, { type: outputMimeType }));
       } else {
+        console.error('Failed to create blob or blob is empty');
         reject(new Error('Failed to convert canvas to blob'));
       }
-    }, mimeType, 0.92);
+    }, outputMimeType, 0.92);
   });
 }
 
@@ -150,6 +156,7 @@ export async function blurFacesInImage(file: File): Promise<File> {
     
     // Load the image
     const img = await loadImage(file);
+    console.log(`Image loaded: ${img.width}x${img.height}`);
     
     // Create canvas and draw image
     const canvas = document.createElement('canvas');
@@ -162,15 +169,19 @@ export async function blurFacesInImage(file: File): Promise<File> {
       return file;
     }
     
-    ctx.drawImage(img, 0, 0);
+    // Draw the original image first
+    ctx.drawImage(img, 0, 0, img.width, img.height);
     
     // Apply blur to detected face regions
     applyBlurToRegions(canvas, ctx, faces);
     
+    // Clean up the object URL
+    URL.revokeObjectURL(img.src);
+    
     // Convert back to file
     const blurredFile = await canvasToFile(canvas, file.name, file.type || 'image/jpeg');
     
-    console.log('Face blur completed successfully');
+    console.log(`Face blur completed. Original: ${file.size} bytes, Blurred: ${blurredFile.size} bytes`);
     return blurredFile;
     
   } catch (error) {
