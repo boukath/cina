@@ -197,9 +197,9 @@ const BookingSection = () => {
                   <Clock className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-foreground">Essai Coiffure</h4>
+                  <h4 className="font-semibold text-foreground">Service Rapide</h4>
                   <p className="text-sm text-muted-foreground">
-                    Essai inclus pour les coiffures de mariée
+                    Confirmation sous 24h
                   </p>
                 </div>
               </div>
