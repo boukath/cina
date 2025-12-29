@@ -56,7 +56,7 @@ const translations: Record<Language, Record<string, string>> = {
     // About
     "about.subtitle": "À Propos",
     "about.title": "Bonjour, je suis",
-    "about.name": "Hassina",
+    "about.name": "Cina",
     "about.description1": "Passionnée par la beauté et l'art de la coiffure depuis plus de 4 ans, je me suis spécialisée dans les coiffures de mariage, invitées et occasions spéciales. Mon objectif est de sublimer chaque femme pour son jour spécial.",
     "about.description2": "Chaque cliente est unique, et je m'engage à créer une coiffure qui reflète sa personnalité et s'harmonise parfaitement avec son style et le thème de son événement.",
     "about.expertise": "Expertise",
@@ -123,7 +123,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Footer
     "footer.rights": "Tous droits réservés.",
     "footer.made": "Fait avec",
-    "footer.for": "pour Hassina",
+    "footer.for": "pour Cina",
   },
   ar: {
     // Header

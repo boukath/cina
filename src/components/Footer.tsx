@@ -19,7 +19,7 @@ const Footer = () => {
 
           {/* Made with love */}
           <p className="flex items-center gap-1 text-sm text-background/70">
-            Fait avec <Heart className="w-4 h-4 text-primary fill-primary" /> pour Hassina
+            Fait avec <Heart className="w-4 h-4 text-primary fill-primary" /> pour Cina
           </p>
         </div>
       </div>

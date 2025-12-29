@@ -63,7 +63,7 @@ export const BeforeAfterSection = () => {
             Transformations
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Découvrez les métamorphoses capillaires réalisées par Hassina. 
+            Découvrez les métamorphoses capillaires réalisées par Cina. 
             Glissez pour voir l'avant et l'après de chaque transformation.
           </p>
         </motion.div>
