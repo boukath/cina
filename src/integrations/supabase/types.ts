@@ -178,6 +178,36 @@ export type Database = {
         }
         Relationships: []
       }
+      testimonials: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_approved: boolean
+          name: string
+          rating: number
+          role: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_approved?: boolean
+          name: string
+          rating?: number
+          role?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_approved?: boolean
+          name?: string
+          rating?: number
+          role?: string | null
+        }
+        Relationships: []
+      }
       time_slots: {
         Row: {
           booking_id: string | null

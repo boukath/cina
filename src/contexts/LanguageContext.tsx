@@ -72,6 +72,14 @@ const translations: Record<Language, Record<string, string>> = {
     "testimonials.subtitle": "Témoignages",
     "testimonials.title": "Ce Que Disent Mes Clientes",
     "testimonials.description": "La satisfaction de mes clientes est ma plus grande récompense.",
+    "testimonials.form.title": "Partagez Votre Expérience",
+    "testimonials.form.description": "Votre avis compte ! Partagez votre expérience avec les autres.",
+    "testimonials.form.rating": "Votre note",
+    "testimonials.form.name": "Votre nom",
+    "testimonials.form.role": "Occasion",
+    "testimonials.form.content": "Votre témoignage",
+    "testimonials.form.submit": "Envoyer mon témoignage",
+    "testimonials.form.success": "Merci ! Votre témoignage sera publié après validation.",
     
     // FAQ
     "faq.subtitle": "FAQ",
@@ -179,6 +187,14 @@ const translations: Record<Language, Record<string, string>> = {
     "testimonials.subtitle": "آراء العملاء",
     "testimonials.title": "ماذا تقول عميلاتي",
     "testimonials.description": "رضا عميلاتي هو أكبر مكافأة لي.",
+    "testimonials.form.title": "شاركي تجربتك",
+    "testimonials.form.description": "رأيك يهمنا! شاركي تجربتك مع الآخرين",
+    "testimonials.form.rating": "تقييمك",
+    "testimonials.form.name": "الاسم",
+    "testimonials.form.role": "المناسبة",
+    "testimonials.form.content": "تقييمك",
+    "testimonials.form.submit": "إرسال تقييمي",
+    "testimonials.form.success": "شكراً! سيتم نشر تقييمك بعد المراجعة.",
     
     // FAQ
     "faq.subtitle": "الأسئلة الشائعة",
