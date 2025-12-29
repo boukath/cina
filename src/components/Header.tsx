@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import NotificationButton from "@/components/NotificationButton";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -61,8 +62,9 @@ const Header = () => {
           ))}
         </div>
 
-        {/* CTA Button & Language */}
+        {/* CTA Button & Language & Notifications */}
         <div className="hidden md:flex items-center gap-3">
+          <NotificationButton variant="icon" />
           <LanguageSwitcher />
           <Button variant="hero" size="default" asChild>
             <a href="/#reservation">
@@ -103,7 +105,8 @@ const Header = () => {
                   {link.label}
                 </a>
               ))}
-              <div className="pt-4 border-t border-border/50">
+              <div className="pt-4 border-t border-border/50 flex items-center gap-3">
+                <NotificationButton variant="icon" />
                 <LanguageSwitcher />
               </div>
               <Button variant="hero" size="lg" className="mt-2" asChild>
