@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Calendar, Clock, User, Phone, Mail, MessageSquare, CheckCircle, X, Users } from "lucide-react";
 import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import DateTimePicker from "./DateTimePicker";
 import { Checkbox } from "@/components/ui/checkbox";
+import { notifyAdminNewBooking } from "@/lib/adminNotifications";
 
 interface Service {
   id: string;
@@ -161,10 +163,24 @@ const BookingSection = () => {
             servicesDetails: selectedServices,
           },
         });
-        console.log("Admin notification sent successfully");
+        console.log("Admin WhatsApp notification sent successfully");
       } catch (notifyError) {
-        console.error("Failed to send admin notification:", notifyError);
-        // Don't fail the booking if notification fails
+        console.error("Failed to send admin WhatsApp notification:", notifyError);
+      }
+
+      // Send push notification to admin
+      try {
+        const formattedDate = format(selectedDate, "d MMMM yyyy", { locale: fr });
+        await notifyAdminNewBooking({
+          clientName: formData.name,
+          service: servicesText,
+          date: formattedDate,
+          time: selectedTime,
+          totalPrice,
+        });
+        console.log("Admin push notification sent successfully");
+      } catch (pushError) {
+        console.error("Failed to send admin push notification:", pushError);
       }
 
       setIsSubmitted(true);
