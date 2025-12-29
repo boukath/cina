@@ -25,14 +25,14 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) {
       console.error('LOVABLE_API_KEY not configured');
       return new Response(
-        JSON.stringify({ processedImage: null, message: 'AI not configured' }),
+        JSON.stringify({ faces: [], message: 'AI not configured' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Processing image for face blurring:', filename);
+    console.log('Processing image for face detection:', filename);
 
-    // Use Lovable AI to edit the image and blur faces
+    // Use Lovable AI to detect faces in the image
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -40,14 +40,25 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: "Please blur all human faces in this image to make them unrecognizable. Apply a strong gaussian blur effect to any faces you detect. Keep everything else in the image exactly the same - only blur the faces. If there are no faces, return the image unchanged."
+                text: `Analyze this image and detect all human faces. For each face found, provide the bounding box coordinates as percentages of the image dimensions (0-100).
+
+Return ONLY a valid JSON object with this exact structure, no other text:
+{
+  "faces": [
+    {"x": number, "y": number, "width": number, "height": number}
+  ]
+}
+
+Where x,y is the top-left corner of the face bounding box, and width,height are the dimensions.
+All values should be percentages (0-100) of the image size.
+If no faces are detected, return: {"faces": []}`
               },
               {
                 type: "image_url",
@@ -57,8 +68,7 @@ serve(async (req) => {
               }
             ]
           }
-        ],
-        modalities: ["image", "text"]
+        ]
       })
     });
 
@@ -80,37 +90,48 @@ serve(async (req) => {
       }
       
       return new Response(
-        JSON.stringify({ processedImage: null, message: 'AI processing failed' }),
+        JSON.stringify({ faces: [], message: 'AI processing failed' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const data = await response.json();
     console.log('AI response received');
+    
+    const content = data.choices?.[0]?.message?.content || '';
+    console.log('AI content:', content);
 
-    // Extract the processed image from the response
-    const processedImageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-
-    if (processedImageUrl) {
-      console.log('Face blur successful, returning processed image');
+    // Parse the JSON response from the AI
+    try {
+      // Extract JSON from the response (handle markdown code blocks)
+      let jsonStr = content;
+      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) {
+        jsonStr = jsonMatch[1].trim();
+      }
+      
+      const parsed = JSON.parse(jsonStr);
+      const faces = parsed.faces || [];
+      
+      console.log('Detected faces:', faces.length);
+      
       return new Response(
-        JSON.stringify({ processedImage: processedImageUrl }),
+        JSON.stringify({ faces }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } catch (parseError) {
+      console.error('Failed to parse AI response:', parseError);
+      return new Response(
+        JSON.stringify({ faces: [], message: 'Could not parse face detection result' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    // No image returned, return original
-    console.log('No processed image returned, using original');
-    return new Response(
-      JSON.stringify({ processedImage: null }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
 
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error in blur-faces function:', errorMessage);
     return new Response(
-      JSON.stringify({ error: errorMessage, processedImage: null }),
+      JSON.stringify({ error: errorMessage, faces: [] }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
