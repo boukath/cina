@@ -75,12 +75,15 @@ const BookingSection = () => {
     setIsLoading(true);
 
     try {
+      const eventDate = format(selectedDate, "yyyy-MM-dd");
+      const eventTime = selectedTime + ":00";
+
       const { error } = await supabase.from("bookings").insert({
         name: formData.name,
         phone: formData.phone,
         email: formData.email || null,
-        event_date: format(selectedDate, "yyyy-MM-dd"),
-        event_time: selectedTime + ":00",
+        event_date: eventDate,
+        event_time: eventTime,
         service: formData.service,
         message: formData.message || null,
       });
@@ -93,6 +96,25 @@ const BookingSection = () => {
           variant: "destructive",
         });
         return;
+      }
+
+      // Send WhatsApp notification to admin
+      try {
+        await supabase.functions.invoke("notify-admin-booking", {
+          body: {
+            name: formData.name,
+            phone: formData.phone,
+            email: formData.email || undefined,
+            service: formData.service,
+            event_date: eventDate,
+            event_time: selectedTime,
+            message: formData.message || undefined,
+          },
+        });
+        console.log("Admin notification sent successfully");
+      } catch (notifyError) {
+        console.error("Failed to send admin notification:", notifyError);
+        // Don't fail the booking if notification fails
       }
 
       setIsSubmitted(true);
